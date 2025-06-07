@@ -105,7 +105,6 @@ public class UserController {
     public ResponseMessage<?> changePassword(@RequestBody ChangePasswordRequest request) {
 
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-        System.out.println(currentUsername);
 
         if (!currentUsername.equals(request.getUsername())) {
             throw new SecurityException("You can only change your own password");

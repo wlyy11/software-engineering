@@ -16,6 +16,9 @@ public class Record {
     @Column(name = "record_restaurant_id" )
     private int res_id;  // 所属的餐厅号
 
+    @Column(name = "record_reserved_person")  // 已预约人数
+    private int reservedPerson;
+
     @Override
     public String toString() {
         return "Record{" +
@@ -23,7 +26,16 @@ public class Record {
                 ", time='" + time + '\'' +
                 ", person=" + person +
                 ", res_id=" + res_id +
+                ", reservedPerson=" + reservedPerson +
                 '}';
+    }
+
+    public int getReservedPerson() {
+        return reservedPerson;
+    }
+
+    public void setReservedPerson(int reservedPerson) {
+        this.reservedPerson = reservedPerson;
     }
 
     public int getId() {
@@ -60,10 +72,11 @@ public class Record {
 
     public Record(){}
 
-    public Record(int id, String time, int person, int res_id) {
+    public Record(int id, String time, int person, int res_id, int reservedPerson) {
         this.id = id;
         this.time = time;
         this.person = person;
         this.res_id = res_id;
+        this.reservedPerson = reservedPerson;
     }
 }

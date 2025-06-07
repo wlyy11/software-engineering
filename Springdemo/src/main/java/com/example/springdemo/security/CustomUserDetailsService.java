@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.example.springdemo.pojo.User.UserStatus.APPROVED;
+
 @Service // 关键注解：标记为 Spring Bean
 public class CustomUserDetailsService implements UserDetailsService {
 
@@ -29,6 +31,12 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .orElseThrow(() ->
                         new UsernameNotFoundException("User not found: " + username)
                 );
+
+        System.out.print(user.getStatus());
+        if (user.getStatus()!=APPROVED){
+            System.out.print(user.getStatus());
+            throw new UsernameNotFoundException("User not approved");
+        }
 
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getName())

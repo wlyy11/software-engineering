@@ -1,3 +1,18 @@
+新增管理员处理注册账号请求功能，用户User表新增字段status，表示用户的注册状态，
+账号权限为顾客时直接接受，为经理时status为PENDING，管理员只有一个账号sa，新注册账号则REJECTED
+
+新增表tb_audit，存储请求列表，三个属性audit_id 请求id，handled请求是否已经处理，applicant_id请求的用户id
+
+测试流程 
+首先登录sa账号，添加Token
+Get localhost:8080/user/admin/approvals/pending  获得待处理的请求
+
+处理请求，也需添加Token。  添加 Path参数 requestId，添加Query 参数 approved
+localhost:8080/user/admin/approvals/{requestId}/handle?approved=false
+
+AdminApprovalController
+
+
 基于Spring Boot 实现了用户账号注册，登录，修改密码以及注销账号的功能
 
 主要文件`src`构成
@@ -14,15 +29,19 @@
 │  │              │      GlobalExceptionHandlerAdvice.java //异常类
 │  │              ├─interfac
 │  │              │      UserController.java     //界面层
+│  │              │      AdminApprovalController //管理员界面层
 │  │              ├─logic
 │  │              │      IUserLogic.java         //逻辑层接口
 │  │              │      UserLogic.java          //逻辑层
+│  │              │      IRegisterRequestLogic   //管理员逻辑层接口
+│  │              │      RegisterRequestLogic    //管理员逻辑层 
 │  │              ├─model                        //模型层
 │  │              ├─pojo                         //各种类的实现
 │  │              │  │  Record.java              //记录人数类
 │  │              │  │  ResponseMessage.java     //返回信息类
 │  │              │  │  Restaurant.java          //餐厅类
 │  │              │  │  User.java                //用户类
+│  │              │  │  User_Audit               //用户账号请求类
 │  │              │  └─dto                       //操作类
 │  │              │          ChangePasswordRequest.java //修改密码类
 │  │              │          DeleteUserRequest.java     //注销账号类
@@ -32,6 +51,8 @@
 │  │              ├─repo
 │  │              │      UserRepo.java           
                   |      //数据层(用于对数据库进行增删改查操作)
+│  │              │      RegisterRequestRepo
+                  |      //账号请求数据层
 │  │              └─security  
                     //安全类(使用JWT，当用户登录后生成一个Token密钥，
                     //      用户使用这个Token才能修改密码注销账号，
