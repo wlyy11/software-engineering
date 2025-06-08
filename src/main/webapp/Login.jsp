@@ -163,16 +163,6 @@
                             <input type="password" id="login_password" name="password" required>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="login_role">身份</label>
-                            <select id="login_role" name="role" required>
-                                <option value="">-- 请选择身份 --</option>
-                                <option value="customer">顾客</option>
-                                <option value="manager">经理</option>
-                                <option value="admin">管理员</option>
-                            </select>
-                        </div>
-                        
                         <button type="submit" class="btn btn-primary">登录</button>
                     </form>
                     
