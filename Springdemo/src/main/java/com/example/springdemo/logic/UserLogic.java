@@ -15,9 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.example.springdemo.pojo.User.UserStatus.*;
 
@@ -29,6 +28,7 @@ public class UserLogic implements IUserLogic {
     UserRepo userRepo;
     @Autowired
     private RegisterRequestRepo requestRepo;
+
 
     @Override
     public User add(UserDto user) {
@@ -142,6 +142,5 @@ public class UserLogic implements IUserLogic {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         userRepo.delete(user);
     }
-
 
 }

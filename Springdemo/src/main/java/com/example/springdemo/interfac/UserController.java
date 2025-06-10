@@ -1,6 +1,8 @@
 package com.example.springdemo.interfac;
 
+import com.example.springdemo.logic.DataRecordService;
 import com.example.springdemo.logic.IUserLogic;
+import com.example.springdemo.logic.TxtFileReader;
 import com.example.springdemo.pojo.ResponseMessage;
 import com.example.springdemo.pojo.User;
 import com.example.springdemo.pojo.dto.*;
@@ -19,10 +21,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/user") // URL:localhost:8080/user
@@ -44,12 +45,14 @@ public class UserController {
     }
 
     // find
+    /*
     @GetMapping("/{userName}")  //URL:localhost:8080/user/name    method:get
     public ResponseMessage<User> findUserName(@PathVariable String userName) {
         User newUser = userLogic.getUserName(userName).
                 orElseThrow(() -> new RuntimeException("用户不存在!"));
         return ResponseMessage.success(newUser);
     }
+     */
 
     // change
     @PutMapping
@@ -84,7 +87,11 @@ public class UserController {
     private UserDetailsService userDetailsService;
 
     @PostMapping("/login")
-    public ResponseMessage<User> login(@RequestBody Map<String, String> authenticationRequest) {
+    public ResponseMessage<User> login(@RequestBody Map<String, String> authenticationRequest
+    , HttpServletRequest request) {
+
+        System.out.println("Request URL: " + request.getRequestURL());
+        System.out.println("Method: " + request.getMethod());
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(authenticationRequest.get("username"),
@@ -98,6 +105,17 @@ public class UserController {
         Map<String, String> response = new HashMap<>();
         response.put("token", jwt);
         return ResponseMessage.success(response);
+    }
+
+    // 查看自己信息
+    @GetMapping("/me")
+    public ResponseMessage<?> viewUser() {
+
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        System.out.println("Current username: " + currentUsername);
+        User newUser = userLogic.getUserName(currentUsername)
+                .orElseThrow(() -> new RuntimeException("用户不存在!"));
+        return ResponseMessage.success(newUser);
     }
 
     // 修改密码
@@ -126,6 +144,35 @@ public class UserController {
         userLogic.changePassword(request.getUsername(), request.getPassword(), request.getPassword());
         userLogic.deleteUser(request.getUsername());
         return ResponseEntity.ok("Account deleted successfully");
+    }
+
+    // 运行python
+    @Autowired
+    private PythonRunnerService pythonRunner;
+
+    @GetMapping("/hello")
+    public String hello(@RequestParam(required = false) String name) {
+        return pythonRunner.runPythonScript(name);
+    }
+
+    // 读取txt文件
+    @Autowired
+    private TxtFileReader txtFileReader;
+    @Autowired
+    private DataRecordService DataRecordLogit;
+
+    @GetMapping("/txt")
+    public ResponseMessage<?> getAllTxtFiles() {
+        try {
+            String folderPath = "C:\\JAVA\\1\\Springdemo\\result_yolov5\\exp3";
+            Map<String, String> s = txtFileReader.readAllTxtFiles(folderPath);
+            System.out.println(s);
+            DataRecordLogit.saveMapData(s);
+            return ResponseMessage.success("success");
+
+        } catch (IOException e) {
+            throw new RuntimeException("错误!");
+        }
     }
 
 }

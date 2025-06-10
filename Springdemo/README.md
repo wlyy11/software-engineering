@@ -1,16 +1,5 @@
-新增管理员处理注册账号请求功能，用户User表新增字段status，表示用户的注册状态，
-账号权限为顾客时直接接受，为经理时status为PENDING，管理员只有一个账号sa，新注册账号则REJECTED
-
-新增表tb_audit，存储请求列表，三个属性audit_id 请求id，handled请求是否已经处理，applicant_id请求的用户id
-
-测试流程 
-首先登录sa账号，添加Token
-Get localhost:8080/user/admin/approvals/pending  获得待处理的请求
-
-处理请求，也需添加Token。  添加 Path参数 requestId，添加Query 参数 approved
-localhost:8080/user/admin/approvals/{requestId}/handle?approved=false
-
-AdminApprovalController
+新增登录后查看账号信息功能，详见viewUser函数，API测试也需要添加Token
+新增读取图像统计人数后生成结果的txt文件功能，读取结果txt，并将结果写入数据库Record表中
 
 
 基于Spring Boot 实现了用户账号注册，登录，修改密码以及注销账号的功能
@@ -81,5 +70,13 @@ AdminApprovalController
     在 Value 列输入：`Bearer <您的JWT令牌>`,例如 `Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ3bHl5eSIsImlhdCI6MTc0ODg2NDIwMiwiZXhwIjoxODM1MjY0MjAyfQ.5PYRqNa_ep8znJtraV8mVJGKXGffsdWzBuPDu_IzchpgrTax6ZJZ-BdW0eyH5BocUNzt0BTRaSyGM8xEGloa8Q` 
 5. 最后修改密码，![img_4.png](image/img_4.png) 修改其他账号的密码无法成功并抛出错误`You can only change your own password` ![img_5.png](image/img_5.png)
 
+管理员审批权限，测试流程
+首先登录sa账号，添加Token
+Get localhost:8080/user/admin/approvals/pending  获得待处理的请求
+
+处理请求，也需添加Token。  添加 Path参数 requestId，添加Query 参数 approved
+localhost:8080/user/admin/approvals/{requestId}/handle?approved=false
+
+AdminApprovalController
 
 需要改进：目前不清楚前端登录后怎么自动保存Token，手动添加很麻烦，请之后负责前端以及界面层的同学修改
