@@ -5,7 +5,10 @@ import com.example.springdemo.pojo.dto.LoginDto;
 import com.example.springdemo.pojo.dto.RegisterDto;
 import com.example.springdemo.pojo.dto.UserDto;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public interface IUserLogic {
     /**
@@ -43,4 +46,5 @@ public interface IUserLogic {
     void changePassword(String username, String oldPassword, String newPassword);
 
     void deleteUser(String username);
+
 }

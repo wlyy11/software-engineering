@@ -1,3 +1,7 @@
+新增登录后查看账号信息功能，详见viewUser函数，API测试也需要添加Token
+新增读取图像统计人数后生成结果的txt文件功能，读取结果txt，并将结果写入数据库Record表中
+
+
 基于Spring Boot 实现了用户账号注册，登录，修改密码以及注销账号的功能
 
 主要文件`src`构成
@@ -14,15 +18,19 @@
 │  │              │      GlobalExceptionHandlerAdvice.java //异常类
 │  │              ├─interfac
 │  │              │      UserController.java     //界面层
+│  │              │      AdminApprovalController //管理员界面层
 │  │              ├─logic
 │  │              │      IUserLogic.java         //逻辑层接口
 │  │              │      UserLogic.java          //逻辑层
+│  │              │      IRegisterRequestLogic   //管理员逻辑层接口
+│  │              │      RegisterRequestLogic    //管理员逻辑层 
 │  │              ├─model                        //模型层
 │  │              ├─pojo                         //各种类的实现
 │  │              │  │  Record.java              //记录人数类
 │  │              │  │  ResponseMessage.java     //返回信息类
 │  │              │  │  Restaurant.java          //餐厅类
 │  │              │  │  User.java                //用户类
+│  │              │  │  User_Audit               //用户账号请求类
 │  │              │  └─dto                       //操作类
 │  │              │          ChangePasswordRequest.java //修改密码类
 │  │              │          DeleteUserRequest.java     //注销账号类
@@ -32,6 +40,8 @@
 │  │              ├─repo
 │  │              │      UserRepo.java           
                   |      //数据层(用于对数据库进行增删改查操作)
+│  │              │      RegisterRequestRepo
+                  |      //账号请求数据层
 │  │              └─security  
                     //安全类(使用JWT，当用户登录后生成一个Token密钥，
                     //      用户使用这个Token才能修改密码注销账号，
@@ -60,5 +70,13 @@
     在 Value 列输入：`Bearer <您的JWT令牌>`,例如 `Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ3bHl5eSIsImlhdCI6MTc0ODg2NDIwMiwiZXhwIjoxODM1MjY0MjAyfQ.5PYRqNa_ep8znJtraV8mVJGKXGffsdWzBuPDu_IzchpgrTax6ZJZ-BdW0eyH5BocUNzt0BTRaSyGM8xEGloa8Q` 
 5. 最后修改密码，![img_4.png](image/img_4.png) 修改其他账号的密码无法成功并抛出错误`You can only change your own password` ![img_5.png](image/img_5.png)
 
+管理员审批权限，测试流程
+首先登录sa账号，添加Token
+Get localhost:8080/user/admin/approvals/pending  获得待处理的请求
+
+处理请求，也需添加Token。  添加 Path参数 requestId，添加Query 参数 approved
+localhost:8080/user/admin/approvals/{requestId}/handle?approved=false
+
+AdminApprovalController
 
 需要改进：目前不清楚前端登录后怎么自动保存Token，手动添加很麻烦，请之后负责前端以及界面层的同学修改

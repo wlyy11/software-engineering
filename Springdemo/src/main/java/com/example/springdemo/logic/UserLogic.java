@@ -1,9 +1,11 @@
 package com.example.springdemo.logic;
 
 import com.example.springdemo.pojo.User;
+import com.example.springdemo.pojo.User_Audit;
 import com.example.springdemo.pojo.dto.LoginDto;
 import com.example.springdemo.pojo.dto.RegisterDto;
 import com.example.springdemo.pojo.dto.UserDto;
+import com.example.springdemo.repo.RegisterRequestRepo;
 import com.example.springdemo.repo.UserRepo;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,8 +15,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
-import java.util.Collections;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.example.springdemo.pojo.User.UserStatus.*;
 
 @Service // spring的bean
 
@@ -22,6 +26,9 @@ public class UserLogic implements IUserLogic {
 
     @Autowired
     UserRepo userRepo;
+    @Autowired
+    private RegisterRequestRepo requestRepo;
+
 
     @Override
     public User add(UserDto user) {
@@ -73,7 +80,26 @@ public class UserLogic implements IUserLogic {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
             User newUser = new User();
             BeanUtils.copyProperties(user,newUser);
-            return userRepo.save(newUser);
+
+            if (Objects.equals(newUser.getAuthority(),"经理")){
+                newUser.setStatus(PENDING);
+
+                // 创建审核请求
+                User_Audit request = new User_Audit();
+                request.setApplicant(newUser);
+                requestRepo.save(request);
+
+                return userRepo.save(newUser);
+            }
+            else if (Objects.equals(newUser.getAuthority(),"管理员")){
+                newUser.setStatus(REJECTED);
+                return userRepo.save(newUser);
+            }
+            else {
+                newUser.setStatus(APPROVED);
+                return userRepo.save(newUser);
+            }
+
         }
     }
 
@@ -116,6 +142,5 @@ public class UserLogic implements IUserLogic {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         userRepo.delete(user);
     }
-
 
 }

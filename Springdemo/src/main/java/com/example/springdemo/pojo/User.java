@@ -25,6 +25,16 @@ public class User {
     @Column(name = "user_authority" )
     private String authority;
 
+    public enum UserStatus {
+        PENDING,    // 待审核
+        APPROVED,   // 已批准
+        REJECTED    // 已拒绝
+    }
+    @Enumerated(EnumType.STRING)
+    private UserStatus status = UserStatus.APPROVED; // 默认待审核状态
+
+
+
     private Collection<? extends GrantedAuthority> authorities;
 
     // 将字符串权限转换为 GrantedAuthority 集合
@@ -88,6 +98,14 @@ public class User {
 
     public String getAuthority() {
         return authority;
+    }
+
+    public void setStatus(UserStatus status) {
+        this.status = status;
+    }
+
+    public UserStatus getStatus() {
+        return status;
     }
 
     @Override
