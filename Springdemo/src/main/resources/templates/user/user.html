@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>用户信息</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #007BFF;
+        }
+        .user-info {
+            font-size: 18px;
+            line-height: 2;
+        }
+        .user-info label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>用户个人页面</h1>
+    <div class="user-info">
+        <p><label>用户名：</label><span th:text="${username}">加载中...</span></p>
+        <p><label>身份：</label><span th:text="${role}">加载中...</span></p>
+    </div>
+	    <a th:href="@{/user/change-password(username=${username})}">
+	    <button>修改密码</button>
+		</a>
+	</div>
+</body>
+</html>

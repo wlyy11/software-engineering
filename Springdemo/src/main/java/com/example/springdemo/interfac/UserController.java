@@ -1,6 +1,8 @@
 package com.example.springdemo.interfac;
 
 import com.example.springdemo.logic.DataRecordService;
+import org.springframework.ui.Model;
+import org.springframework.stereotype.Controller;
 import com.example.springdemo.logic.IUserLogic;
 import com.example.springdemo.logic.TxtFileReader;
 import com.example.springdemo.pojo.ResponseMessage;
@@ -25,7 +27,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@RestController
+@Controller
 @RequestMapping("/user") // URL:localhost:8080/user
 
 public class UserController {
@@ -45,6 +47,16 @@ public class UserController {
     }
 
     // find
+    @GetMapping("/{username}")
+    public String showUserProfile(@PathVariable String username, Model model) {
+        User user = userLogic.getUserName(username)
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+
+        model.addAttribute("username", user.getName());
+        model.addAttribute("role", user.getAuthority()); // 确保 User 实体中有 getRole()
+
+        return "user"; // 显示 user.html
+    }
     /*
     @GetMapping("/{userName}")  //URL:localhost:8080/user/name    method:get
     public ResponseMessage<User> findUserName(@PathVariable String userName) {
@@ -70,9 +82,16 @@ public class UserController {
     // register
 
 
+    // register
+    // 返回注册页面（GET）
+    @GetMapping("/register")
+    public String showRegisterPage() {
+        return "register"; // 对应templates/register.html
+    }
+    
     @PostMapping("/register")
     public ResponseMessage<User> register(@Validated @RequestBody RegisterDto dto) {
-
+    	System.out.println("注册数据: " + dto);
         User newUser = userLogic.register(dto);
         return ResponseMessage.success(newUser);
     }
@@ -86,13 +105,21 @@ public class UserController {
     @Autowired
     private UserDetailsService userDetailsService;
 
+    @GetMapping("/login")
+    public String showLoginPage() {
+    	return "login";
+    }
+    
+    // 这个方法用于处理登录，并在成功后跳转到用户个人页面
     @PostMapping("/login")
-    public ResponseMessage<User> login(@RequestBody Map<String, String> authenticationRequest
-    , HttpServletRequest request) {
-
-        System.out.println("Request URL: " + request.getRequestURL());
-        System.out.println("Method: " + request.getMethod());
-
+    @ResponseBody
+    public ResponseMessage<User> login(@RequestBody Map<String, String> authenticationRequest) {
+    	
+    	// 在控制台输出接收到的用户名和密码
+        System.out.println("接收到的登录信息：");
+        System.out.println("用户名: " + authenticationRequest.get("username"));
+        System.out.println("密码: " + authenticationRequest.get("password"));
+        
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(authenticationRequest.get("username"),
                         authenticationRequest.get("password"))
@@ -100,10 +127,15 @@ public class UserController {
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.get("username"));
         final String jwt = jwtUtil.generateToken(userDetails);
-
+        System.out.println("jwt = " + jwt);
 
         Map<String, String> response = new HashMap<>();
         response.put("token", jwt);
+        
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        System.out.println("currentUsername = " + SecurityContextHolder.getContext().getAuthentication().getName());
         return ResponseMessage.success(response);
     }
 
@@ -119,11 +151,17 @@ public class UserController {
     }
 
     // 修改密码
+    @GetMapping("/change-password")
+    public String showChangeWordPage(@RequestParam String username, Model model) {
+    	model.addAttribute("username", username);
+    	return "change-password";
+    }
     @PutMapping("/change-password")
     public ResponseMessage<?> changePassword(@RequestBody ChangePasswordRequest request) {
-
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-
+        System.out.println("currentUsername = " + currentUsername);
+        System.out.println("requestUsername = " + request.getUsername());
+        
         if (!currentUsername.equals(request.getUsername())) {
             throw new SecurityException("You can only change your own password");
         }

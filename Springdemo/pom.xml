@@ -93,6 +93,11 @@
             <version>4.0.1</version>
             <scope>provided</scope> <!-- 表示由服务器（如 Tomcat）运行时提供 -->
         </dependency>
+        
+        <dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
 
     </dependencies>
 

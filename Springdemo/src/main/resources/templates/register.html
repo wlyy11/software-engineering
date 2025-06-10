@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户注册</title>
+    <style>
+        /* 基本页面样式 */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            padding: 20px;
+            background-color: #007BFF;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        /* 表单容器 */
+        .form-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 表单标签 */
+        label {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* 输入框和选择框 */
+        input[type="text"], input[type="password"], select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus, select:focus {
+            border-color: #007BFF;
+            outline: none;
+        }
+
+        /* 提交按钮 */
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* 响应式设计 */
+        @media screen and (max-width: 600px) {
+            .form-container {
+                padding: 15px;
+            }
+            button {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>用户注册</h1>
+    <div class="form-container">
+        <form id="registerForm">
+            <div>
+                <label for="name">用户名：</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div>
+                <label for="password">密码：</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div>
+                <label for="authority">身份：</label>
+                <select id="authority" name="authority" required>
+                    <option value="顾客">顾客</option>
+                    <option value="经理">经理</option>
+                    <option value="管理员">管理员</option>
+                </select>
+            </div>
+            <button type="submit">注册</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('registerForm');
+            form.addEventListener('submit', function (event) {
+                event.preventDefault(); // 阻止表单默认提交行为
+
+                // 获取表单数据
+                const formData = {
+                    name: document.getElementById('name').value,
+                    password: document.getElementById('password').value,
+                    authority: document.getElementById('authority').value
+                };
+
+                // 将表单数据转换为 JSON 字符串
+                const jsonFormData = JSON.stringify(formData);
+
+                // 创建 XMLHttpRequest 请求
+                const request = new XMLHttpRequest();
+                request.open('POST', '/user/register', true);  // 确保发送到正确的URL
+                request.setRequestHeader('Content-Type', 'application/json'); // 设置请求头为 JSON 格式
+
+                // 处理响应
+                request.onload = function () {
+                    if (request.status >= 200 && request.status < 400) {
+                        // 请求失败，显示错误信息
+                        alert('注册失败：' + request.responseText);
+                    } else {
+                        // 请求成功，显示成功信息
+                        alert('注册成功！');
+                        window.location.href = "/user/login"; // 可跳转到登录页面
+                    }
+                };
+
+                // 发送请求
+                request.send(jsonFormData);
+            });
+        });
+    </script>
+</body>
+</html>
+
