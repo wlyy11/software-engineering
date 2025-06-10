@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户登录</title>
+    <script>
+        // 页面加载完成后绑定事件
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('loginForm');
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();  // 阻止默认表单提交
+
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+
+                // 使用 Fetch API 发送 POST 请求到后端登录接口
+                fetch('/user/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // 登录成功时，保存 JWT Token 到 localStorage
+                    if (data.code === 200 && data.message) {
+                        localStorage.setItem('jwtToken', data.message);
+                        alert('登录成功！');
+                        
+                        // 登录成功后跳转到用户个人页面
+                        window.location.href = '/user/' + username;
+                    } else {
+                        alert('登录失败：' + (data.message || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    console.error('登录请求出错:', error);
+                    alert('登录失败，请稍后再试');
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>用户登录</h1>
+    <!-- 登录表单 -->
+    <form id="loginForm">
+        <div>
+            <label for="username">用户名：</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div>
+            <label for="password">密码：</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit">登录</button>
+    </form>
+    
+    <!-- 注册按钮，点击跳转到注册页面 -->
+    <div>
+        <button onclick="window.location.href='/user/register'">注册</button>
+    </div>
+</body>
+</html>
