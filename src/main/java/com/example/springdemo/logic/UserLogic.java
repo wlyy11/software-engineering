@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.example.springdemo.pojo.User.UserStatus.*;
 
@@ -27,7 +28,6 @@ public class UserLogic implements IUserLogic {
     UserRepo userRepo;
     @Autowired
     private RegisterRequestRepo requestRepo;
-
 
 
     @Override

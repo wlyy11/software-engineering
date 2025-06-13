@@ -27,6 +27,12 @@ public class AppoitmentController {
     @Autowired
     UserLogic userLogic;
 
+    @GetMapping("/CustomerAppoint")
+    public String customerAppointmentPage() {
+
+        return "customerappointment";
+    }
+
     //顾客排队
     @PostMapping("/New_Appoint")
     public ResponseMessage<?> newAppoint(@RequestParam String currentUsername,

@@ -17,8 +17,7 @@ public class GlobalExceptionHandlerAdvice {
     public ResponseMessage handlerException(Exception e, HttpServletRequest request, HttpServletResponse response) {
 
         logger.error("异常:", e);
-        System.out.println(e.getMessage());
-        return new ResponseMessage(500,e.getMessage(),null);
+        return new ResponseMessage(500, e.getMessage(), null);
     }
 
 }

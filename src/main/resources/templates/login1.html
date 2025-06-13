@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>用户登录</title>
+    <script>
+        // 使用 JavaScript 以 JSON 格式发送表单数据
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('loginForm');
+            form.addEventListener('submit', function(event) {
+                event.preventDefault(); // 阻止表单默认提交行为
+                
+                // 获取表单数据
+                const formData = {
+                    username: document.getElementById('username').value,
+                    password: document.getElementById('password').value
+                };
+                
+                // 将表单数据转换为 JSON 字符串
+                const jsonFormData = JSON.stringify(formData);
+                
+                // 创建请求
+                const request = new XMLHttpRequest();
+                request.open('POST', '/user/login', true); // 发送 POST 请求到登录接口
+                request.setRequestHeader('Content-Type', 'application/json');
+                
+                // 处理响应
+                request.onload = function() {
+                    if (request.status >= 200 && request.status < 400) {
+                        // 请求成功，处理响应
+                        alert('登录成功！');
+                        // window.location.href = '/user/customer';  // 登录成功后跳转到主页或仪表板
+                    } else {
+                        // 请求失败
+                        alert('登录失败：' + request.responseText);
+                    }
+                };
+                
+                // 发送请求
+                request.send(jsonFormData);
+            });
+        });
+    </script>
+</head>
+<body>
+    <h2>用户登录</h2>
+    
+    <!-- 登录表单 -->
+    <form id="loginForm">
+        <div>
+            <label>用户名:</label>
+            <input type="text" id="username" required>
+        </div>
+        <div>
+            <label>密码:</label>
+            <input type="password" id="password" required>
+        </div>
+        <button type="submit">登录</button>
+    </form>
+</body>
+</html>
+
