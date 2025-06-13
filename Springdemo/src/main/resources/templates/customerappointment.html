@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>餐厅预约排队系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #4a6fcb, #1a2a6c);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 992px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 30px;
+            margin-bottom: 30px;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            color: #1a2a6c;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
+        }
+
+        .card-title i {
+            margin-right: 12px;
+            font-size: 1.8rem;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background-color: white;
+            appearance: none;
+        }
+
+        .form-group select:focus, .form-group input:focus {
+            border-color: #4a6fcb;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 111, 203, 0.2);
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper::after {
+            content: "\f078";
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #777;
+            pointer-events: none;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            background: linear-gradient(to right, #00b09b, #96c93d);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn:hover {
+            background: linear-gradient(to right, #96c93d, #00b09b);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-cancel {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+        }
+
+        .btn-cancel:hover {
+            background: linear-gradient(to right, #c0392b, #e74c3c);
+        }
+
+        .restaurant-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 2px solid #f0f0f0;
+            margin-bottom: 20px;
+        }
+
+        .restaurant-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .restaurant-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #1a2a6c, #4a6fcb);
+            color: white;
+        }
+
+        .restaurant-header h3 {
+            font-size: 1.5rem;
+        }
+
+        .restaurant-body {
+            padding: 20px;
+        }
+
+        .restaurant-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .restaurant-info .label {
+            color: #777;
+            font-weight: 500;
+        }
+
+        .restaurant-info .value {
+            font-weight: 600;
+        }
+
+        .progress-container {
+            margin: 20px 0;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #00b09b, #96c93d);
+            border-radius: 5px;
+        }
+
+        .queue-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .queue-info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .reservation-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .reservation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.3s;
+        }
+
+        .reservation-item:hover {
+            background: #f8f9fa;
+        }
+
+        .reservation-info h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .reservation-info p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .reservation-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-waiting {
+            background: #ffecb3;
+            color: #ff9e00;
+        }
+
+        .status-confirmed {
+            background: #c8e6c9;
+            color: #388e3c;
+        }
+
+        .status-completed {
+            background: #e0e0e0;
+            color: #616161;
+        }
+
+        .no-reservations {
+            text-align: center;
+            padding: 40px 20px;
+            color: #777;
+        }
+
+        .no-reservations i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #b0b0b0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(26, 42, 108, 0.2);
+            border-top: 5px solid #1a2a6c;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .restaurant-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .restaurant-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px solid #eaeaea;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .restaurant-item:hover {
+            border-color: #4a6fcb;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .restaurant-item.selected {
+            border-color: #00b09b;
+            background: #f0fdf4;
+        }
+
+        .restaurant-item h4 {
+            color: #1a2a6c;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .restaurant-item h4 i {
+            margin-right: 10px;
+            color: #4a6fcb;
+        }
+
+        .restaurant-item p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .restaurant-rating {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .restaurant-rating .stars {
+            color: #ffc107;
+            margin-right: 8px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px 0;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 40px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1><i class="fas fa-calendar-check"></i> 餐厅预约排队系统</h1>
+        <p>轻松预约您喜爱的餐厅，享受无忧用餐体验</p>
+    </header>
+
+    <div class="dashboard">
+        <!-- 左侧：预约排队区域 -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-utensils"></i>
+                <h2>餐厅预约</h2>
+            </div>
+
+            <div class="form-group">
+                <label for="restaurant">选择餐厅</label>
+                <div class="select-wrapper">
+                    <select id="restaurant">
+                        <option value="">-- 请选择餐厅 --</option>
+                        <!-- 餐厅选项将通过JavaScript动态加载 -->
+                    </select>
+                </div>
+            </div>
+
+            <div class="restaurant-grid" id="restaurantGrid">
+                <!-- 餐厅网格视图将通过JavaScript动态加载 -->
+            </div>
+
+            <button id="makeReservationBtn" class="btn" style="margin-top: 20px;">
+                <i class="fas fa-bookmark"></i> 立即预约
+            </button>
+
+            <div id="restaurantQueueInfo" style="margin-top: 30px;">
+                <!-- 餐厅排队信息将动态加载 -->
+            </div>
+        </div>
+
+        <!-- 右侧：我的预约区域 -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-list-ol"></i>
+                <h2>我的预约</h2>
+            </div>
+
+            <div id="reservationsContainer">
+                <div class="loading" id="loadingIndicator">
+                    <div class="spinner"></div>
+                    <p>正在加载预约信息...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>©餐厅人流量检测系统 | 当前用户: <span id="currentUsername">加载中...</span></p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentUser = localStorage.getItem('username');
+        document.getElementById('currentUsername').textContent = currentUser;
+
+        const makeReservationBtn = document.getElementById('makeReservationBtn');
+        const restaurantSelect = document.getElementById('restaurant');
+        const restaurantGrid = document.getElementById('restaurantGrid');
+        const reservationsContainer = document.getElementById('reservationsContainer');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const restaurantQueueInfo = document.getElementById('restaurantQueueInfo');
+
+        // 加载餐厅列表
+        function loadRestaurants() {
+            fetch(`/user/viewRestaurant?currentUsername=${currentUser}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200 && data.data) {
+                        populateRestaurantSelect(data.data);
+                        populateRestaurantGrid(data.data);
+                    } else {
+                        restaurantGrid.innerHTML = '<p>加载餐厅失败: ' + (data.message || '未知错误') + '</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('加载餐厅失败:', error);
+                    restaurantGrid.innerHTML = '<p>加载餐厅失败，请稍后再试</p>';
+                });
+        }
+
+        // 填充餐厅下拉列表
+        function populateRestaurantSelect(restaurants) {
+            // 清空现有选项
+            restaurantSelect.innerHTML = '<option value="">-- 请选择餐厅 --</option>';
+
+            // 添加新选项
+            restaurants.forEach(restaurant => {
+                const option = document.createElement('option');
+                option.value = restaurant.name;
+                option.textContent = restaurant.name;
+                restaurantSelect.appendChild(option);
+            });
+        }
+
+        // 填充餐厅网格视图
+        function populateRestaurantGrid(restaurants) {
+            if (restaurants.length === 0) {
+                restaurantGrid.innerHTML = '<p>暂无餐厅数据</p>';
+                return;
+            }
+
+            let html = '';
+            restaurants.forEach(restaurant => {
+                html += `
+                    <div class="restaurant-item" data-id="${restaurant.id}" data-name="${restaurant.name}">
+                        <h4><i class="fas fa-store"></i> ${restaurant.name}</h4>
+                        <p><i class="fas fa-map-marker-alt"></i> ${restaurant.local || '地址未提供'}</p>
+                        <p><i class="fas fa-phone"></i> ${restaurant.phone || '电话未提供'}</p>
+                        <div class="restaurant-rating">
+                            <div class="stars">
+                                ${getStarRating(restaurant.rating)}
+                            </div>
+                            <span>${restaurant.rating || 0}/5</span>
+                        </div>
+                    </div>
+                    `;
+            });
+
+            restaurantGrid.innerHTML = html;
+
+            // 添加点击事件
+            document.querySelectorAll('.restaurant-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    // 移除之前的选择
+                    document.querySelectorAll('.restaurant-item').forEach(i => {
+                        i.classList.remove('selected');
+                    });
+
+                    // 添加当前选择
+                    this.classList.add('selected');
+
+                    // 更新下拉菜单
+                    restaurantSelect.value = this.dataset.name;
+
+                    // 加载排队信息
+                    loadRestaurantQueue(this.dataset.id);
+                });
+            });
+        }
+
+        // 生成星级评分
+        function getStarRating(rating) {
+            const fullStars = Math.floor(rating || 0);
+            const halfStar = (rating || 0) - fullStars >= 0.5 ? 1 : 0;
+            const emptyStars = 5 - fullStars - halfStar;
+
+            let html = '';
+            for (let i = 0; i < fullStars; i++) {
+                html += '<i class="fas fa-star"></i>';
+            }
+            for (let i = 0; i < halfStar; i++) {
+                html += '<i class="fas fa-star-half-alt"></i>';
+            }
+            for (let i = 0; i < emptyStars; i++) {
+                html += '<i class="far fa-star"></i>';
+            }
+
+            return html;
+        }
+
+        // 加载预约列表
+        function loadReservations() {
+            loadingIndicator.style.display = 'block';
+
+            fetch(`/user/my_Appoint?currentUsername=${currentUser}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200 && data.data) {
+                        displayReservations(data.data);
+                    } else {
+                        displayNoReservations();
+                    }
+                })
+                .catch(error => {
+                    console.error('加载预约失败:', error);
+                    reservationsContainer.innerHTML = '<div class="error">加载预约失败，请稍后再试</div>';
+                })
+                .finally(() => {
+                    loadingIndicator.style.display = 'none';
+                });
+        }
+
+        // 显示预约列表
+        function displayReservations(reservations) {
+            if (reservations.length === 0) {
+                displayNoReservations();
+                return;
+            }
+
+            let html = '<div class="reservation-list">';
+            reservations.forEach(res => {
+                const date = new Date(res.createdAt);
+                const dateStr = date.toLocaleString('zh-CN');
+
+                let statusClass = 'status-waiting';
+                let statusText = '等待中';
+
+                if (res.status === 'CONFIRMED') {
+                    statusClass = 'status-confirmed';
+                    statusText = '已确认';
+                } else if (res.status === 'COMPLETED') {
+                    statusClass = 'status-completed';
+                    statusText = '已完成';
+                }
+
+                html += `
+                    <div class="reservation-item">
+                        <div class="reservation-info">
+                            <h4>${res.restaurantName || '未知餐厅'}</h4>
+                            <p><i class="fas fa-clock"></i> ${dateStr} | 状态: <span class="reservation-status ${statusClass}">${statusText}</span></p>
+                        </div>
+                        <div>
+                            <button class="btn btn-cancel" onclick="cancelReservation(${res.id})">
+                                <i class="fas fa-times"></i> 取消
+                            </button>
+                        </div>
+                    </div>
+                    `;
+            });
+            html += '</div>';
+
+            reservationsContainer.innerHTML = html;
+        }
+
+        // 显示无预约
+        function displayNoReservations() {
+            reservationsContainer.innerHTML = `
+                <div class="no-reservations">
+                    <i class="far fa-calendar-times"></i>
+                    <h3>暂无预约记录</h3>
+                    <p>您还没有任何餐厅预约，立即预约享受美食吧！</p>
+                </div>
+                `;
+        }
+
+        // 餐厅选择变化时加载排队信息
+        restaurantSelect.addEventListener('change', function() {
+            const selectedRestaurant = this.value;
+            if (!selectedRestaurant) {
+                restaurantQueueInfo.innerHTML = '';
+                // 清除网格选择
+                document.querySelectorAll('.restaurant-item').forEach(i => {
+                    i.classList.remove('selected');
+                });
+                return;
+            }
+
+            // 查找对应的餐厅ID
+            const selectedItem = document.querySelector(`.restaurant-item[data-name="${selectedRestaurant}"]`);
+            if (selectedItem) {
+                // 更新网格选择
+                document.querySelectorAll('.restaurant-item').forEach(i => {
+                    i.classList.remove('selected');
+                });
+                selectedItem.classList.add('selected');
+
+                // 加载排队信息
+                loadRestaurantQueue(selectedItem.dataset.id);
+            }
+        });
+
+        // 加载餐厅排队信息
+        function loadRestaurantQueue(restaurantId) {
+            restaurantQueueInfo.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载排队信息...</p></div>';
+
+            // 模拟API调用，实际应用中替换为真实API
+            // fetch(`/appointment/queue/${restaurantId}`)
+            // .then(response => response.json())
+            // .then(data => {
+            //     if (data.code === 200) {
+            //         displayRestaurantQueue(data.data);
+            //     } else {
+            //         restaurantQueueInfo.innerHTML = `<p>加载失败: ${data.message}</p>`;
+            //     }
+            // })
+
+            // 模拟数据
+            setTimeout(() => {
+                const mockData = {
+                    restaurantName: restaurantSelect.value,
+                    currentCapacity: Math.floor(Math.random() * 80) + 20,
+                    totalCapacity: 100,
+                    waitingCount: Math.floor(Math.random() * 20),
+                    avgWaitTime: Math.floor(Math.random() * 30) + 5
+                };
+                displayRestaurantQueue(mockData);
+            }, 800);
+        }
+
+        // 显示餐厅排队信息
+        function displayRestaurantQueue(queueInfo) {
+            const occupancy = Math.round((queueInfo.currentCapacity / queueInfo.totalCapacity) * 100);
+
+            const html = `
+                <div class="restaurant-card">
+                    <div class="restaurant-header">
+                        <h3>${queueInfo.restaurantName}</h3>
+                    </div>
+                    <div class="restaurant-body">
+                        <div class="restaurant-info">
+                            <div>
+                                <div class="label">当前容量</div>
+                                <div class="value">${queueInfo.currentCapacity}/${queueInfo.totalCapacity}</div>
+                            </div>
+                            <div>
+                                <div class="label">当前排队</div>
+                                <div class="value">${queueInfo.waitingCount}人</div>
+                            </div>
+                        </div>
+
+                        <div class="progress-container">
+                            <div class="progress-label">
+                                <span>餐厅占用率</span>
+                                <span>${occupancy}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${occupancy}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="queue-info">
+                            <div class="queue-info-item">
+                                <span>平均等待时间</span>
+                                <span><strong>${queueInfo.avgWaitTime}</strong> 分钟</span>
+                            </div>
+                            <div class="queue-info-item">
+                                <span>预计您的位置</span>
+                                <span><strong>${queueInfo.waitingCount + 1}</strong> 位</span>
+                            </div>
+                            <div class="queue-info-item">
+                                <span>预计等待时间</span>
+                                <span><strong>${Math.round(queueInfo.avgWaitTime * (queueInfo.waitingCount + 1) / 2)}</strong> 分钟</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+
+            restaurantQueueInfo.innerHTML = html;
+        }
+
+        // 创建新预约
+        makeReservationBtn.addEventListener('click', function() {
+            const restaurant = restaurantSelect.value;
+
+            if (!restaurant) {
+                alert('请选择餐厅');
+                return;
+            }
+
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 预约中...';
+            this.disabled = true;
+
+            fetch('/user/New_Appoint', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    currentUsername: currentUser,
+                    restaurantname: restaurant
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        alert('预约成功！');
+                        loadReservations();
+
+                        // 重新加载排队信息
+                        const selectedItem = document.querySelector('.restaurant-item.selected');
+                        if (selectedItem) {
+                            loadRestaurantQueue(selectedItem.dataset.id);
+                        }
+                    } else {
+                        alert('预约失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('预约失败:', error);
+                    alert('预约失败，请稍后再试');
+                })
+                .finally(() => {
+                    this.innerHTML = '<i class="fas fa-bookmark"></i> 立即预约';
+                    this.disabled = false;
+                });
+        });
+
+        // 取消预约
+        window.cancelReservation = function(id) {
+            if (!confirm('确定要取消此预约吗？')) {
+                return;
+            }
+
+            fetch(`/appointment/cancel/${id}?currentUsername=${currentUser}`, {
+                method: 'POST'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        alert('预约已取消');
+                        loadReservations();
+                    } else {
+                        alert('取消失败: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('取消失败:', error);
+                    alert('取消失败，请稍后再试');
+                });
+        };
+
+        // 初始加载
+        loadRestaurants();
+        loadReservations();
+    });
+</script>
+</body>
+</html>

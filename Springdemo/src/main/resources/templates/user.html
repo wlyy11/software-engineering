@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户个人页面</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(to right, #4a6fcb, #1a2a6c);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .user-info {
+            padding: 30px;
+        }
+
+        .info-item {
+            display: flex;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-item label {
+            flex: 1;
+            font-weight: 600;
+            color: #555;
+            display: flex;
+            align-items: center;
+        }
+
+        .info-item label i {
+            margin-right: 10px;
+            color: #4a6fcb;
+        }
+
+        .info-item span {
+            flex: 2;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .role-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .role-customer {
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        .role-manager {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 0 30px 30px;
+        }
+
+        .action-btn {
+            background: linear-gradient(to right, #4a6fcb, #1a2a6c);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .action-btn:hover {
+            background: linear-gradient(to right, #1a2a6c, #4a6fcb);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .action-btn.reserve {
+            background: linear-gradient(to right, #00b09b, #96c93d);
+        }
+
+        .action-btn.reserve:hover {
+            background: linear-gradient(to right, #96c93d, #00b09b);
+        }
+
+        .action-btn.manage {
+            background: linear-gradient(to right, #8b5cf6, #6366f1);
+        }
+
+        .action-btn.manage:hover {
+            background: linear-gradient(to right, #6366f1, #8b5cf6);
+        }
+
+        .action-btn.delete {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+        }
+
+        .action-btn.delete:hover {
+            background: linear-gradient(to right, #c0392b, #e74c3c);
+        }
+
+        .action-btn i {
+            font-size: 1.2rem;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+        }
+
+        /* 注销确认模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 450px;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .warning-message {
+            background: #fef3f2;
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+        }
+
+        .warning-message h3 {
+            color: #e74c3c;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-form {
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-group label i {
+            margin-right: 10px;
+            color: #e74c3c;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: #e74c3c;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: none;
+        }
+
+        .modal-btn.confirm {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .modal-btn.confirm:hover {
+            background: linear-gradient(to right, #c0392b, #e74c3c);
+        }
+
+        .modal-btn.cancel {
+            background: #f0f0f0;
+            color: #555;
+        }
+
+        .modal-btn.cancel:hover {
+            background: #e0e0e0;
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 20px 15px;
+            }
+
+            .user-info {
+                padding: 20px;
+            }
+
+            .actions {
+                padding: 0 20px 20px;
+            }
+
+            .modal-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1><i class="fas fa-user-circle"></i> 用户个人页面</h1>
+        <p>管理您的账户和设置</p>
+    </div>
+
+    <div class="user-info">
+        <div class="info-item">
+            <label><i class="fas fa-user"></i> 用户名：</label>
+            <span th:text="${username}">加载中...
+                <span class="role-indicator"
+                      th:classappend="${role == '顾客'} ? 'role-customer' : 'role-manager'"
+                      th:text="${role}">
+                </span>
+            </span>
+        </div>
+
+        <div class="info-item">
+            <label><i class="fas fa-id-card"></i> 身份：</label>
+            <span th:text="${role}">加载中...</span>
+        </div>
+
+        <div class="info-item">
+            <label><i class="fas fa-shield-alt"></i> 账户状态：</label>
+            <span>正常 <i class="fas fa-check-circle" style="color: #2ecc71;"></i></span>
+        </div>
+    </div>
+
+    <div class="actions">
+        <!-- 顾客专属按钮：预约排队 -->
+        <a th:if="${role == '顾客'}" th:href="@{/user/CustomerAppoint}" class="action-btn reserve">
+        <i class="fas fa-calendar-check"></i>
+        预约排队
+    </a>
+
+        <!-- 经理专属按钮：管理餐厅 -->
+        <a th:if="${role == '经理'}" th:href="@{/manager/dashboard}" class="action-btn manage">
+            <i class="fas fa-utensils"></i>
+            管理餐厅
+        </a>
+
+        <!-- 通用功能按钮 -->
+        <a th:href="@{/user/change-password(username=${username})}" class="action-btn">
+            <i class="fas fa-lock"></i>
+            修改密码
+        </a>
+
+        <!-- 注销账号按钮 -->
+        <button class="action-btn delete" onclick="openDeleteModal()">
+            <i class="fas fa-user-slash"></i>
+            注销账号
+        </button>
+    </div>
+
+    <div class="footer">
+        <p> 餐饮人流量检测系统 | 当前身份: <span th:text="${role}"></span></p>
+    </div>
+</div>
+
+<!-- 注销账号确认模态框 -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-exclamation-triangle"></i> 注销账号确认</h2>
+        </div>
+
+        <div class="modal-body">
+            <div class="warning-message">
+                <h3><i class="fas fa-exclamation-circle"></i> 警告：此操作不可逆！</h3>
+                <p>您的所有数据将被永久删除且无法恢复。请确认您了解此操作的后果。</p>
+            </div>
+
+            <div class="modal-form">
+                <div class="form-group">
+                    <label for="confirmUsername"><i class="fas fa-user"></i> 用户名</label>
+                    <input type="text" id="confirmUsername" th:value="${username}" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword"><i class="fas fa-lock"></i> 请输入密码确认</label>
+                    <input type="password" id="confirmPassword" placeholder="输入您的账户密码" required>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="modal-btn cancel" onclick="closeDeleteModal()">
+                        <i class="fas fa-times"></i> 取消
+                    </button>
+                    <button class="modal-btn confirm" onclick="deleteAccount()">
+                        <i class="fas fa-trash-alt"></i> 确认注销
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 打开注销确认模态框
+    function openDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    // 关闭注销确认模态框
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+        document.getElementById('confirmPassword').value = '';
+    }
+
+    // 注销账号请求
+    function deleteAccount() {
+        const currentUser = localStorage.getItem('username');
+        const username = document.getElementById('confirmUsername').value;
+        const password = document.getElementById('confirmPassword').value;
+
+        if (!password) {
+            alert('请输入密码进行确认');
+            return;
+        }
+
+        // 创建请求数据
+        const requestData = {
+            username: username,
+            password: password
+        };
+
+        // 发送请求
+        fetch('/user/delete-user?currentUsername='+ currentUser, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        })
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    return response.text().then(text => { throw new Error(text) });
+                }
+            })
+            .then(message => {
+                alert(message);
+                // 注销成功后跳转到登录页
+                window.location.href = '/user/login';
+            })
+            .catch(error => {
+                alert('账号注销失败: ' + error.message);
+            });
+    }
+</script>
+</body>
+</html>

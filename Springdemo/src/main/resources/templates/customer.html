@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>用户查询</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('searchForm');
+            form.addEventListener('submit', function(event) {
+                event.preventDefault(); // 阻止表单默认提交行为
+                
+                // 获取表单中的用户名
+                const userName = document.getElementById('userName').value;
+                
+                // 创建请求
+                const request = new XMLHttpRequest();
+                request.open('GET', '/user/' + userName, true);
+                request.onload = function() {
+                    if (request.status >= 200 && request.status < 400) {
+                        // 请求成功，处理响应
+                        const response = JSON.parse(request.responseText);
+                        // 显示用户信息
+                        document.getElementById('userInfo').innerHTML = 
+                            `<h3>用户信息:</h3>
+                            <p>用户名: ${response.data.name}</p>
+                            <p>身份: ${response.data.authority}</p>`;
+                    } else {
+                        // 请求失败
+                        alert('用户不存在！');
+                    }
+                };
+                
+                // 发送请求
+                request.send();
+            });
+
+            // 模拟餐厅拥挤程度和预约排队功能
+            document.getElementById('reserveButton').addEventListener('click', function() {
+                const restaurantCrowd = Math.floor(Math.random() * 100) + 1; // 随机生成拥挤程度
+                document.getElementById('restaurantStatus').innerHTML = `当前餐厅拥挤程度：${restaurantCrowd}%`;
+
+                if (restaurantCrowd <= 80) {
+                    alert('您已成功预约排队！');
+                } else {
+                    alert('餐厅非常拥挤，可能需要等待较长时间。');
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <h2>查询用户信息</h2>
+    <!-- 用户名查询表单 -->
+    <form id="searchForm">
+        <div>
+            <label for="userName">请输入用户名：</label>
+            <input type="text" id="userName" name="userName" required>
+        </div>
+        <button type="submit">查询</button>
+    </form>
+
+    <!-- 显示用户信息 -->
+    <div id="userInfo"></div>
+
+    <hr>
+
+    <!-- 餐厅拥挤程度和预约排队功能 -->
+    <h2>餐厅预约排队</h2>
+    <div id="restaurantStatus">
+        当前餐厅拥挤程度：正在加载...
+    </div>
+    <button id="reserveButton">预约排队</button>
+
+</body>
+</html>
