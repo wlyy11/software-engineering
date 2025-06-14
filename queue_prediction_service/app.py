@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib import font_manager
 import numpy as np
+import re
 
 from predictors.wait_time_predictor import WaitTimePredictor
 from predictors.traffic_predictor import TrafficPredictor
@@ -22,6 +23,41 @@ CORS(app)
 # 初始化预测器
 wait_time_predictor = WaitTimePredictor()
 traffic_predictor = TrafficPredictor()
+
+def safe_parse_datetime(datetime_str):
+    """
+    安全解析时间戳字符串，处理Java生成的高精度时间戳
+    将超过6位的微秒小数截断为6位，确保Python能正确解析
+    """
+    if not datetime_str:
+        return datetime.now()
+    
+    try:
+        # 使用正则表达式匹配并截断微秒部分
+        # 匹配格式：YYYY-MM-DDTHH:MM:SS.微秒部分
+        pattern = r'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})\.(\d+)'
+        match = re.match(pattern, datetime_str)
+        
+        if match:
+            base_time = match.group(1)  # 日期时间部分
+            microseconds = match.group(2)  # 微秒部分
+            
+            # 截断微秒为最多6位
+            if len(microseconds) > 6:
+                microseconds = microseconds[:6]
+                print(f"时间戳精度截断: {datetime_str} -> {base_time}.{microseconds}")
+            
+            # 重新组装时间戳
+            truncated_datetime_str = f"{base_time}.{microseconds}"
+            return datetime.fromisoformat(truncated_datetime_str)
+        else:
+            # 如果没有微秒部分，直接解析
+            return datetime.fromisoformat(datetime_str)
+            
+    except Exception as e:
+        print(f"时间戳解析失败: {datetime_str}, 错误: {e}")
+        print("使用当前时间作为回退")
+        return datetime.now()
 
 @app.route('/api/predict/wait-time', methods=['POST'])
 def predict_wait_time():
@@ -41,7 +77,7 @@ def predict_wait_time():
             current_queue_length=data.get('queueLength', 0),
             average_service_time=data.get('averageServiceTime', 10.0),
             active_servers=data.get('activeServers', 1),
-            timestamp=datetime.fromisoformat(data.get('currentTime')) if data.get('currentTime') else datetime.now()
+            timestamp=safe_parse_datetime(data.get('currentTime'))
         )
         
         # 构造RestaurantConfig
@@ -55,7 +91,7 @@ def predict_wait_time():
         
         # 构造PredictionContext
         context = PredictionContext(
-            current_time=datetime.fromisoformat(data.get('currentTime')) if data.get('currentTime') else datetime.now(),
+            current_time=safe_parse_datetime(data.get('currentTime')),
             weather_info={'condition': data.get('weather', 'sunny')},
             is_holiday=data.get('isHoliday', False),
             local_events=[],
@@ -117,7 +153,7 @@ def predict_traffic():
         )
         # 构造PredictionContext
         context = PredictionContext(
-            current_time=datetime.fromisoformat(data.get('currentTime')) if data.get('currentTime') else datetime.now(),
+            current_time=safe_parse_datetime(data.get('currentTime')),
             weather_info={'condition': data.get('weather', 'sunny')},
             is_holiday=data.get('isHoliday', False),
             local_events=[],
@@ -275,7 +311,7 @@ def generate_traffic_chart(request_data, prediction, context):
                 peak_traffic = peak.get('peak_traffic', 0)
                 
                 try:
-                    start_time = datetime.fromisoformat(start_time_str.replace('Z', '+00:00'))
+                    start_time = safe_parse_datetime(start_time_str.replace('Z', '+00:00'))
                     ax.axvspan(start_time, start_time + timedelta(hours=1), 
                               alpha=0.2, color='orange', label='Peak Period')
                 except:
