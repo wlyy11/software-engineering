@@ -90,6 +90,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
+    @ResponseBody
     public ResponseMessage<User> register(@Validated @RequestBody RegisterDto dto) {
 
         User newUser = userLogic.register(dto);
@@ -193,6 +194,7 @@ public class UserController {
     private PythonRunnerService pythonRunner;
 
     @GetMapping("/hello")
+    @ResponseBody
     public String hello(@RequestParam(required = false) String name) {
         return pythonRunner.runPythonScript(name);
     }

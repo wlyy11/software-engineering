@@ -5,6 +5,7 @@ import com.example.springdemo.pojo.User_Audit;
 import com.example.springdemo.pojo.dto.LoginDto;
 import com.example.springdemo.pojo.dto.RegisterDto;
 import com.example.springdemo.pojo.dto.UserDto;
+import com.example.springdemo.repo.AuditRepo;
 import com.example.springdemo.repo.RegisterRequestRepo;
 import com.example.springdemo.repo.UserRepo;
 import org.springframework.beans.BeanUtils;
@@ -28,6 +29,8 @@ public class UserLogic implements IUserLogic {
     UserRepo userRepo;
     @Autowired
     private RegisterRequestRepo requestRepo;
+    @Autowired
+    private AuditRepo auditRepository;
 
 
     @Override
@@ -140,6 +143,10 @@ public class UserLogic implements IUserLogic {
 
         User user = userRepo.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        List<User_Audit> audits = auditRepository.findByApplicantUserId(user.getId());
+        auditRepository.deleteAll(audits);
+
         userRepo.delete(user);
     }
 
