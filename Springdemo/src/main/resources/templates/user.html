@@ -347,7 +347,7 @@
     </a>
 
         <!-- 经理专属按钮：管理餐厅 -->
-        <a th:if="${role == '经理'}" th:href="@{/manager/dashboard}" class="action-btn manage">
+        <a th:if="${role == '经理'}" th:href="@{/user/manager_restaurant}" class="action-btn manage">
             <i class="fas fa-utensils"></i>
             管理餐厅
         </a>
@@ -366,7 +366,7 @@
     </div>
 
     <div class="footer">
-        <p> 餐饮人流量检测系统 | 当前身份: <span th:text="${role}"></span></p>
+        <p> 餐厅人流量检测系统 | 当前身份: <span th:text="${role}"></span></p>
     </div>
 </div>
 

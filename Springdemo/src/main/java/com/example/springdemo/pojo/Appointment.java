@@ -1,5 +1,6 @@
 package com.example.springdemo.pojo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Table(name = "tb_appoint")
@@ -12,9 +13,11 @@ public class Appointment {
     private int id;
 
     @ManyToOne(cascade = CascadeType.PERSIST)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private User user; // 顾客id
 
     @ManyToOne(cascade = CascadeType.PERSIST)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Restaurant restaurant; // 餐厅编号
 
     @Column(name = "appoint_time")

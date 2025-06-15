@@ -41,14 +41,13 @@ public class DataRecordService {
     }
 
     // 查询最新时间的人数
-    public Optional<DataRecord> getLatestNum(String res_name) {
+    public Optional<DataRecord> getLatestNum(int res_id) {
 
-        if (restaurantRepo.findByRestaurantname(res_name).isEmpty()) {
+        if (restaurantRepo.findById(res_id).isEmpty()) {
             throw new RuntimeException("餐厅不存在!");
         }
         else{
-            Restaurant restau =  restaurantRepo.findByRestaurantname(res_name).get();
-            int res_id = restau.getId();System.out.println(res_id);
+            System.out.println(res_id);
             return repository.findLatestRecord(res_id);
         }
     }

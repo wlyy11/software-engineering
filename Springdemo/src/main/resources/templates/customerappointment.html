@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>餐厅预约排队系统</title>
+    <title>餐厅人流量检测系统 预约排队</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -389,7 +389,7 @@
 <body>
 <div class="container">
     <header>
-        <h1><i class="fas fa-calendar-check"></i> 餐厅预约排队系统</h1>
+        <h1><i class="fas fa-calendar-check"></i> 餐厅预约排队</h1>
         <p>轻松预约您喜爱的餐厅，享受无忧用餐体验</p>
     </header>
 
@@ -457,6 +457,8 @@
         const loadingIndicator = document.getElementById('loadingIndicator');
         const restaurantQueueInfo = document.getElementById('restaurantQueueInfo');
 
+        const restaurantMap = {};
+
         // 加载餐厅列表
         function loadRestaurants() {
             fetch(`/user/viewRestaurant?currentUsername=${currentUser}`)
@@ -486,6 +488,8 @@
                 option.value = restaurant.name;
                 option.textContent = restaurant.name;
                 restaurantSelect.appendChild(option);
+
+                restaurantMap[restaurant.id] = restaurant;
             });
         }
 
@@ -502,13 +506,6 @@
                     <div class="restaurant-item" data-id="${restaurant.id}" data-name="${restaurant.name}">
                         <h4><i class="fas fa-store"></i> ${restaurant.name}</h4>
                         <p><i class="fas fa-map-marker-alt"></i> ${restaurant.local || '地址未提供'}</p>
-                        <p><i class="fas fa-phone"></i> ${restaurant.phone || '电话未提供'}</p>
-                        <div class="restaurant-rating">
-                            <div class="stars">
-                                ${getStarRating(restaurant.rating)}
-                            </div>
-                            <span>${restaurant.rating || 0}/5</span>
-                        </div>
                     </div>
                     `;
             });
@@ -603,8 +600,8 @@
                 html += `
                     <div class="reservation-item">
                         <div class="reservation-info">
-                            <h4>${res.restaurantName || '未知餐厅'}</h4>
-                            <p><i class="fas fa-clock"></i> ${dateStr} | 状态: <span class="reservation-status ${statusClass}">${statusText}</span></p>
+                            <h4>${res.restaurant.name || '未知餐厅'}</h4>
+                            <p><i class="fas fa-clock"></i>  状态: <span class="reservation-status ${statusClass}">${statusText}</span></p>
                         </div>
                         <div>
                             <button class="btn btn-cancel" onclick="cancelReservation(${res.id})">
@@ -656,39 +653,144 @@
             }
         });
 
-        // 加载餐厅排队信息
+// 加载餐厅排队信息
         function loadRestaurantQueue(restaurantId) {
             restaurantQueueInfo.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载排队信息...</p></div>';
 
-            // 模拟API调用，实际应用中替换为真实API
-            // fetch(`/appointment/queue/${restaurantId}`)
-            // .then(response => response.json())
-            // .then(data => {
-            //     if (data.code === 200) {
-            //         displayRestaurantQueue(data.data);
-            //     } else {
-            //         restaurantQueueInfo.innerHTML = `<p>加载失败: ${data.message}</p>`;
-            //     }
-            // })
+            const restaurant = restaurantMap[restaurantId];
+            if (!restaurant) {
+                restaurantQueueInfo.innerHTML = '<p>错误: 找不到餐厅信息</p>';
+                return;
+            }
 
-            // 模拟数据
-            setTimeout(() => {
-                const mockData = {
-                    restaurantName: restaurantSelect.value,
-                    currentCapacity: Math.floor(Math.random() * 80) + 20,
-                    totalCapacity: 100,
-                    waitingCount: Math.floor(Math.random() * 20),
-                    avgWaitTime: Math.floor(Math.random() * 30) + 5
-                };
-                displayRestaurantQueue(mockData);
-            }, 800);
+            const restaurantName = restaurant.name;
+            const maxCapacity = restaurant.maxCapacity || 100;
+
+            // 使用Promise.all同时获取餐厅当前人数和排队人数
+            Promise.all([
+                // 获取餐厅当前人数
+                fetch(`/user/appointment/record?res_id=${encodeURIComponent(restaurantId)}&currentUsername=${encodeURIComponent(currentUser)}`)
+                    .then(response => response.json()),
+
+                // 获取排队人数
+                fetch(`/user/num_Appoint?restaurantId=${encodeURIComponent(restaurantId)}&currentUsername=${encodeURIComponent(currentUser)}`)
+                    .then(response => response.json())
+            ])
+                .then(([recordData, numAppointData]) => {
+                    console.log("记录数据:", recordData);
+                    console.log("排队人数数据:", numAppointData);
+
+                    let currentCapacity = 0;
+                    let recordTime = "最近更新";
+                    let waitingCount = 0;
+
+                    // 处理餐厅当前人数数据
+                    if (recordData.code === 200) {
+                        currentCapacity = recordData.data;
+                    } else {
+                        console.error('获取餐厅当前人数失败:', recordData.message);
+                    }
+
+                    // 处理排队人数数据
+                    if (numAppointData.code === 200) {
+                        if (typeof numAppointData.data === 'number') {
+                            waitingCount = numAppointData.data;
+                        }
+                    } else {
+                        console.error('获取排队人数失败:', numAppointData.message);
+                    }
+
+                    console.log("当前人数:", currentCapacity);
+
+                    // 构建排队信息对象
+                    const queueInfo = {
+                        restaurantId: restaurantId,
+                        restaurantName: restaurantName,
+                        currentCapacity: currentCapacity,
+                        totalCapacity: maxCapacity,
+                        waitingCount: waitingCount,
+                        recordTime: recordTime
+                    };
+
+                    // 显示排队信息
+                    displayRestaurantQueue(queueInfo);
+                })
+                .catch(error => {
+                    console.error('加载排队信息失败:', error);
+                    restaurantQueueInfo.innerHTML = `
+            <div class="error-info">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>加载失败: ${error.message}</p>
+                <button class="retry-btn" onclick="loadRestaurantQueue('${restaurantId}')">
+                    重试
+                </button>
+            </div>
+        `;
+                });
         }
 
-        // 显示餐厅排队信息
+
+
         function displayRestaurantQueue(queueInfo) {
             const occupancy = Math.round((queueInfo.currentCapacity / queueInfo.totalCapacity) * 100);
+            const userId = localStorage.getItem('userId') || 1; // 获取当前用户ID
 
-            const html = `
+            console.log("queue",queueInfo)
+
+            // 显示加载状态
+            restaurantQueueInfo.innerHTML = `
+        <div class="restaurant-card">
+            <div class="restaurant-header">
+                <h3>${queueInfo.restaurantName}</h3>
+            </div>
+            <div class="restaurant-body">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>正在获取排队预测信息...</p>
+                </div>
+            </div>
+        </div>
+    `;
+
+            // 调用后端预测API
+            fetch(`/api/test/queue-prediction/${queueInfo.restaurantId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('预测服务不可用');
+                    }
+
+                    return response.text();
+                })
+                .then(data => {
+                    // 解析后端返回的字符串
+                    const lines = data.split('\n');
+                    //let currentCapacity = 0;
+                    //let waitingCount = 0;
+                    let userPosition = 0;
+                    let predictionText = "";
+
+                    lines.forEach(line => {
+                        if (line.includes("您的实际排队位置")) {
+                            userPosition = parseInt(line.match(/\d+/)[0]);
+                        } else if (line.includes("预测结果")) {
+                            predictionText = line.split("预测结果: ")[1] || "";
+                        }
+                    });
+
+                    console.log("waitingCount",queueInfo.waitingCount)
+                    console.log("userPosition",userPosition)
+
+                    // 从预测文本中提取等待时间
+                    let waitTime = "计算中...";
+                    if (predictionText) {
+                        const timeMatch = predictionText.match(/(\d+)\s*分钟/);
+                        if (timeMatch) {
+                            waitTime = timeMatch[1];
+                        }
+                    }
+
+                    // 构建HTML显示预测结果
+                    const html = `
                 <div class="restaurant-card">
                     <div class="restaurant-header">
                         <h3>${queueInfo.restaurantName}</h3>
@@ -717,48 +819,80 @@
 
                         <div class="queue-info">
                             <div class="queue-info-item">
-                                <span>平均等待时间</span>
-                                <span><strong>${queueInfo.avgWaitTime}</strong> 分钟</span>
-                            </div>
-                            <div class="queue-info-item">
-                                <span>预计您的位置</span>
-                                <span><strong>${queueInfo.waitingCount + 1}</strong> 位</span>
+                                <span>您的排队位置</span>
+                                <span><strong>${queueInfo.waitingCount+1}</strong> 位</span>
                             </div>
                             <div class="queue-info-item">
                                 <span>预计等待时间</span>
-                                <span><strong>${Math.round(queueInfo.avgWaitTime * (queueInfo.waitingCount + 1) / 2)}</strong> 分钟</span>
+                                <span><strong>${waitTime}</strong> 分钟</span>
                             </div>
+                        </div>
+
+                        <div class="prediction-details" style="margin-top: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px;">
+                            <h4 style="margin-bottom: 10px; color: #1a2a6c;"><i class="fas fa-info-circle"></i> 预测详情</h4>
+                            <p style="color: #555; line-height: 1.6;">${predictionText || "基于AI模型的排队预测"}</p>
                         </div>
                     </div>
                 </div>
-                `;
+            `;
 
-            restaurantQueueInfo.innerHTML = html;
+                    restaurantQueueInfo.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('获取预测失败:', error);
+                    restaurantQueueInfo.innerHTML = `
+                <div class="restaurant-card">
+                    <div class="restaurant-header">
+                        <h3>${queueInfo.restaurantName}</h3>
+                    </div>
+                    <div class="restaurant-body">
+                        <div class="error-info">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h3>预测失败</h3>
+                            <p>${error.message || '无法获取预测信息'}</p>
+                            <button class="btn" onclick="loadRestaurantQueue('${queueInfo.restaurantId}')">
+                                <i class="fas fa-redo"></i> 重新尝试
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+                });
         }
 
         // 创建新预约
         makeReservationBtn.addEventListener('click', function() {
             const restaurant = restaurantSelect.value;
 
+
             if (!restaurant) {
                 alert('请选择餐厅');
                 return;
             }
 
+            // 保存原始按钮状态
+            const originalHtml = this.innerHTML;
+
             this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 预约中...';
             this.disabled = true;
 
+            const formData = new FormData();
+            formData.append('currentUsername', currentUser);
+            formData.append('restaurantname', restaurant);
+
             fetch('/user/New_Appoint', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    currentUsername: currentUser,
-                    restaurantname: restaurant
-                })
+                body: formData  // 使用FormData而不是JSON
             })
-                .then(response => response.json())
+                .then(response => {
+                    // 检查HTTP状态码
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(`HTTP错误 ${response.status}: ${text}`);
+                        });
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.code === 200) {
                         alert('预约成功！');
@@ -770,15 +904,15 @@
                             loadRestaurantQueue(selectedItem.dataset.id);
                         }
                     } else {
-                        alert('预约失败: ' + data.message);
+                        alert('预约失败: ' + (data.message || '未知错误'));
                     }
                 })
                 .catch(error => {
                     console.error('预约失败:', error);
-                    alert('预约失败，请稍后再试');
+                    alert('预约失败: ' + error.message);
                 })
                 .finally(() => {
-                    this.innerHTML = '<i class="fas fa-bookmark"></i> 立即预约';
+                    this.innerHTML = originalHtml;
                     this.disabled = false;
                 });
         });
@@ -789,8 +923,8 @@
                 return;
             }
 
-            fetch(`/appointment/cancel/${id}?currentUsername=${currentUser}`, {
-                method: 'POST'
+            fetch(`/user/cancel_appoint/${id}?currentUsername=${currentUser}`, {
+                method: 'DELETE'
             })
                 .then(response => response.json())
                 .then(data => {

@@ -93,4 +93,16 @@ public class AppointLogit {
 
     }
 
+    public void cancel(int app_id, int user_id) {
+
+        if (appointRepo.findById(app_id).isEmpty()) {
+            throw new RuntimeException("记录不存在!");
+        }
+        else {
+            if (appointRepo.findById(app_id).get().getUser().getId() != user_id) {
+                throw new RuntimeException("无法取消其他用户的预约!");
+            }
+            appointRepo.deleteById(appointRepo.findById(app_id).get().getId());
+        }
+    }
 }

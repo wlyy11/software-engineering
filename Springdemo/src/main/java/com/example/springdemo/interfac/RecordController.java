@@ -8,15 +8,9 @@ import com.example.springdemo.pojo.ResponseMessage;
 import com.example.springdemo.pojo.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @RestController
 @RequestMapping("/user") // URL:localhost:8080/user
@@ -28,22 +22,23 @@ public class RecordController {
     IUserLogic userLogic;
 
     // 顾客查看人数
-    @GetMapping("/record")
-    public ResponseMessage<?> viewUser(@RequestParam String res_name,
+    @GetMapping("/appointment/record")
+    @ResponseBody
+    public ResponseMessage<?> viewUser(@RequestParam int res_id,
                                        @RequestParam String currentUsername) {
 
         //String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
         System.out.println("Current username: " + currentUsername);
-        System.out.println("res_name: " + res_name);
+        System.out.println("res_id: " + res_id);
 
         User newUser = userLogic.getUserName(currentUsername)
                 .orElseThrow(() -> new RuntimeException("用户不存在!"));
 
-        if (recordService.getLatestNum(res_name).isEmpty()) {
+        if (recordService.getLatestNum(res_id).isEmpty()) {
             return ResponseMessage.success("暂无记录！");
         }
         else {
-            DataRecord nowrecord =  recordService.getLatestNum(res_name).get();
+            DataRecord nowrecord =  recordService.getLatestNum(res_id).get();
             return ResponseMessage.success(nowrecord.getPerson(),nowrecord.getTime());
         }
 
@@ -51,6 +46,7 @@ public class RecordController {
 
     // 经理查看最近10次人数
     @GetMapping("/record_viewManager")
+    @ResponseBody
     public ResponseMessage<?> viewManager(@RequestParam(defaultValue = "10") int count,
                                           @RequestParam String res_name,
                                           @RequestParam String currentUsername) {
@@ -72,11 +68,23 @@ public class RecordController {
             result.put(record.getTime(), record.getPerson());
         }
 
-        return ResponseMessage.success(result);
+        List<Map.Entry<String, Integer>> entryList = new ArrayList<>(result.entrySet());
+        ListIterator<Map.Entry<String, Integer>> iterator = entryList.listIterator(entryList.size());
+
+        Map<String, Integer> reversedMap = new LinkedHashMap<>();
+        while (iterator.hasPrevious()) {
+            Map.Entry<String, Integer> entry = iterator.previous();
+            reversedMap.put(entry.getKey(), entry.getValue());
+        }
+
+        System.out.println(reversedMap);
+
+        return ResponseMessage.success(reversedMap);
     }
 
     // 经理查看特定时间人数
     @GetMapping("/record_viewDate")
+    @ResponseBody
     public ResponseMessage<?> viewManagerDate(@RequestParam(defaultValue = "6_09") String date,
                                               @RequestParam String res_name,
                                               @RequestParam String currentUsername) {
@@ -98,11 +106,20 @@ public class RecordController {
             result.put(record.getTime(), record.getPerson());
         }
 
-        System.out.println(result);
+        List<Map.Entry<String, Integer>> entryList = new ArrayList<>(result.entrySet());
+        ListIterator<Map.Entry<String, Integer>> iterator = entryList.listIterator(entryList.size());
+
+        Map<String, Integer> reversedMap = new LinkedHashMap<>();
+        while (iterator.hasPrevious()) {
+            Map.Entry<String, Integer> entry = iterator.previous();
+            reversedMap.put(entry.getKey(), entry.getValue());
+        }
+
+        System.out.println(reversedMap);
 
         //String chartHtml = recordService.generateLineChart(result);
 
-        return ResponseMessage.success(result);
+        return ResponseMessage.success(reversedMap);
     }
 
 }

@@ -10,13 +10,14 @@ import com.example.springdemo.pojo.dto.RestaurantDto;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Objects;
 
-@RestController
+@Controller
 @RequestMapping("/user") // URL:localhost:8080/user
 public class RestaurantController {
 
@@ -26,7 +27,14 @@ public class RestaurantController {
     @Autowired
     RestuarantLogit restuarantLogit;
 
+    @GetMapping("/manager_restaurant")
+    public String customerAppointmentPage() {
+
+        return "Restaurant";
+    }
+
     @PostMapping("/New_Restaurant")
+    @ResponseBody
     public ResponseMessage<?> newRestaurant(@Validated @RequestBody RestaurantDto dto,
                                             @RequestParam String currentUsername,
                                             HttpServletRequest request) {
@@ -50,6 +58,7 @@ public class RestaurantController {
 
     // 查看所有餐厅，顾客
     @GetMapping("/viewRestaurant")
+    @ResponseBody
     public ResponseMessage<?> viewRestaurant(@RequestParam String currentUsername) {
 
         User newUser = userLogic.getUserName(currentUsername)
@@ -66,6 +75,7 @@ public class RestaurantController {
 
     // 查看自己管理的餐厅，经理
     @GetMapping("/viewOwnerRestaurant")
+    @ResponseBody
     public ResponseMessage<?> viewOwnerRestaurant(@RequestParam String currentUsername) {
 
         User newUser = userLogic.getUserName(currentUsername)
@@ -83,6 +93,7 @@ public class RestaurantController {
 
     // delete
     @DeleteMapping("/deleteOwnerRestaurant")
+    @ResponseBody
     public ResponseMessage<User> deleteRestaurant(@RequestParam String currentUsername,
                                                   @RequestParam String restaurantname) {
 
