@@ -1,3 +1,16 @@
+
+### 1. 启动预测服务
+```bash
+cd queue_prediction_service
+python -m flask run --host=0.0.0.0 --port=5000
+```
+
+### 2. 启动主服务
+```bash
+cd Springdemo
+mvn spring-boot:run
+```
+
 新增新建餐厅，查看餐厅，参看餐厅人数以及排队预约功能，后端功能还差预测时间和生成人数曲线图图像
 
 API测试：
