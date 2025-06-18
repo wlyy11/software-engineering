@@ -10,8 +10,10 @@ import java.util.concurrent.TimeUnit;
 public class PythonRunnerService {
 
     // 配置化路径（可在application.properties中设置）
+    // python
     private static final String PYTHON_PATH = "C:\\Users\\wlyy\\.conda\\envs\\pytorch\\python.exe";
-    private static final String SCRIPT_PATH = "E:/study/software_engineering/code/yolov5/detect.py";
+    // detect
+    private static final String SCRIPT_PATH = "C:/JAVA/1/testSpring/Springdemo/yolov5/detect.py";
     private static final int TIMEOUT_SECONDS = 500; // 执行超时时间
 
     public String runPythonScript(String input) {
